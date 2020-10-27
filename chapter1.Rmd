@@ -1,13 +1,14 @@
 
 # About the project
 
-*Write a short description about the course and add a link to your GitHub repository here. This is an R Markdown (.Rmd) file so you should use R Markdown syntax.*
+The course gives an introduction to R and RStudio, a programming language and a graphical user interface popular among data scientists, as well as to version control system GIT and the related website Github. The course also introduces some of the popular techniques and methods used in data analysis. Above all, I expect to learn more seamless workflow with RStudio, GIT, and Github. 
+
+I first came across this course in its early phases when I was doing my bachelor studies. Later in my doctoral studies, I found out from a colleague that this course can be included in the general competence studies and decided to take advantage of the opportunity. I'm convinced that this course is one the most useful options for me and also for many of the fellow researchers working with data.
+
+Here is the link to my Github repository: https://github.com/saviviro/IODS-project
 
 ```{r}
-# This is a so-called "R chunk" where you can write R code.
-
 date()
-
 ```
-The text continues here.
+
 
