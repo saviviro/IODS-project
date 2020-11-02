@@ -30,7 +30,7 @@ create_var <- function(var_names) rowMeans(dplyr::select(learning2014_orig, any_
 # Finally, we construct the new dataset as instructed and remove respondents with exam points variable zero:
 learning2014 <- with(learning2014_orig, data.frame(gender=gender,
                                        age=Age,
-                                       attitude=Attitude,
+                                       attitude=Attitude/10, # Also attitude is scaled back to 1-5
                                        deep=create_var(deep_questions),
                                        stra=create_var(strategic_questions),
                                        surf=create_var(surface_questions),
@@ -52,3 +52,4 @@ write.csv(learning2014, file="data/learning2014.csv", row.names=FALSE)
 lrn2014 <- read.csv("data/learning2014.csv")
 head(lrn2014, n=5)
 str(lrn2014) # 166 observations and 7 variables as should be.
+
