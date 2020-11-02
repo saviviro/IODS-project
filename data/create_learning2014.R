@@ -35,7 +35,7 @@ learning2014 <- with(learning2014_orig, data.frame(gender=gender,
                                        stra=create_var(strategic_questions),
                                        surf=create_var(surface_questions),
                                        points=Points))
-learning2014 <- dplyr::filter(learning2014, points != 0)
+learning2014 <- dplyr::filter(learning2014, points != 0) # Filter out the zero-point respondents
 str(learning2014) # 166 observations and 7 variables as should be.
 
 ########
