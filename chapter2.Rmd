@@ -10,4 +10,11 @@
 date()
 ```
 
-Here we go again...
+#### Task 1.
+We consider a cross-sectional dataset from 2014 containing statistics students' answers to questions regarding teaching and learning. The data contains 7 variables: gender (Male or Female), age, attitude (related to learning statistics, scale 1-5), deep (average of answers related to deep learning, scale 1-5), stra (average of answers related to strategic learning, scale 1-5), surf (average of answers related to surface learning), and points (supposedly exam points). Besides the variable gender, all the variables are numeric. The data is loaded below where also its structure and dimensions are pre-examined. 
+
+```{r}
+learning2014 <- read.csv("data/learning2014.csv")
+head(learning2014, n=5) # The first 5 rows of the data table
+str(learning2014) # Variables and their types
+```
