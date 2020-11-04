@@ -1,4 +1,4 @@
-# Insert chapter 2 title here
+# Regression and model validation
 
 *Describe the work you have done this week and summarize your learning.*
 
@@ -6,15 +6,80 @@
 - Assume the reader has an introductory course level understanding of writing and reading R code as well as statistical methods.
 - Assume the reader has no previous knowledge of your data or the more advanced methods you are using.
 
-```{r}
-date()
-```
-
-#### Task 1.
-We consider a cross-sectional dataset from 2014 containing statistics students' answers to questions regarding teaching and learning. The data contains 7 variables: gender (Male or Female), age, attitude (related to learning statistics, scale 1-5), deep (average of answers related to deep learning, scale 1-5), stra (average of answers related to strategic learning, scale 1-5), surf (average of answers related to surface learning), and points (supposedly exam points). Besides the variable gender, all the variables are numeric. The data is loaded below where also its structure and dimensions are pre-examined. 
+We consider a cross-sectional dataset from 2014 containing statistics students' answers to questions regarding teaching and learning. The data contains 166 observations for 7 variables: gender (Male or Female), age, attitude (related to learning statistics, scale 1-5), deep (average of answers related to deep learning, scale 1-5), stra (average of answers related to strategic learning, scale 1-5), surf (average of answers related to surface learning), and points (exam points). Besides the variable gender (which is of the type character), all the variables are numeric and treated as continuous. The data is loaded below where also its structure and dimensions are pre-examined, confirming our above description of the data types and the numbers of observations and variables. 
 
 ```{r}
 learning2014 <- read.csv("data/learning2014.csv")
 head(learning2014, n=5) # The first 5 rows of the data table
 str(learning2014) # Variables and their types
 ```
+
+After pre-examining the data structure, it is often useful to study the data graphically as it potentially reveals important relations between the observations. A graphical summary of the data is presented below:
+
+```{r}
+# Load the required packages
+library(ggplot2)
+library(GGally, quietly=TRUE)
+
+# Create the summary plot
+p <- ggpairs(learning2014, mapping=aes(col=gender, alpha=1), legend=1,
+             upper=list(continuous=wrap("cor", size=2.5)),
+             lower=list(combo=wrap(ggally_facethist, binwidth=0.5)))
+```
+```{r, echo=FALSE}
+p
+```
+
+The above summary graph matrix contains several components in which the respondents are separated by their gender. In the diagonal, we first have a bar plot expressing the distribution of males and females: appareantly there are almost twice as many females as there are males. The rest of the diagonal shows density diagrams^[It does not say it in the documentation of `ggpairs` how the density diagrams are constructed (possibly some kernel density estimate).] expressing a continuous density of the observations based on the sample. For the variables age, deep, and points, the distributions are rather similar for both genders. It appears, however, that males got on average more points on attitude, while females scored in strategic learning and surface learning. Moreover, the distributions seem non-Gaussian. Particularly the age distribution is very skewed due to the larger number of young and than old respondents. These distributions are presented in an alternative way as histograms in the first column of the graph matrix and also as boxplots in the first row of the graph matrix.
+
+Excluding the first column and row, the lower triangular of graph matrix contains 2D scatter plots between all the numeric variables and the upper triangular the sample correlations. The linear relations (i.e. correlations) between individual variables are mostly quite week, expect that there is relatively high correlation between attitude and points for both females and males. There is also large negative correlation between surface learning and attitude as well as between surface learning and deep learning for males only. The negative correlation between age and points for males seems also notable as there is practically no correlation for females. This could be, however, because of the relatively small number of old males as each of them then has relatively large influence of the sample correlation. The rest of the linear relations between the pairs of variables are mostly relatively similar to males and females, although there are some smaller differences. 
+
+To examine the distributions and examine their normality when the observations are not separated by gender, we plot histograms of the numeric variables and on top of them draw a graph of the estimated normal distribution estimated for the sample.
+```{r}
+par(mfrow=c(2, 3), mar=c(2.6, 2.6, 3, 1)) # Set graphical parameters
+for(i1 in 2:ncol(learning2014)) { # Go through the numerical variables
+  dat <- learning2014[,i1]
+  tmp <- hist(dat, col="skyblue", breaks=15, freq=FALSE,
+              main=colnames(learning2014[i1]))
+  x <- seq(from=min(tmp$breaks), to=max(tmp$breaks), length.out=200) 
+  lines(x=x, y=dnorm(x, mean=mean(dat), sd=sd(dat)), lwd=2)
+}
+```
+As expected, the overall age distribution is skewed. However, for attitude and deep learning the overall distribution somewhat resembles the normal distribution. Strategic learning, surface learning, and exam points are not either very far from Gaussianity when one accounts for the discrete nature of histograms in that the shape of the distribution is to some extend affected by the number of breaks.
+
+For constructing a linear to explain variations in (exam) points, our strategy is to find explanatory variables that have strong linear relation to the points variable. Based on the above summary graph matrix, attitude is the first choice. We also include strategic learning and surface learning for both of which the sample correlations to points are larger than in the other continuous variables. These three variables also carry the advantage that the correlations are similar for males and females, implying that we most likely don't need separate regression lines (or hyperplanes) for different genders. Particularly we are leaving out age from the regression as the correlation to points is quite different for males and females, while the negative correlation of males is mainly attributed to the relatively poor performance of a small number of old male respondents. This can be seen by calculating the sample correlation between age and points for males of age less than 40:
+```{r}
+cor(subset(learning2014, gender == "M" & age < 40, select=c("age", "points")))[1, 2]
+```
+which is slightly positive.
+
+Below, we estimate the model and examine its summary statistics:
+```{r}
+m1 <- lm(points ~ attitude + stra + surf, data=learning2014)
+summary(m1)
+```
+The estimate for the intercept parameter is approximately $11$, meaning that without any points from attutitude, strategic learning, or surface learning, the model predicts $11$ points from the exam. The estimate for the slope parameter of attitude is approximately $3.40$. The model therefore predicts that, ceteris paribus, scoring one extra point from attitude increases exam points by $3.40$. Similarly an extra point in strategic learning predicts $0.85$ points more in the exam and surface learning $0.59$ points less. 
+
+The $t$-tests for which the $p$-values are given above in the right-most column under the headline "coefficients" test the null hypothesis that the true regression coefficient is zero. The test is valid in finite (i.e. "small") samples if conditionally on the regressors, the errors are independently and jointly normally distributed with zero mean and common variance. Asymptotically (i.e. in "large" samples), the test is valid under more relaxed conditions, however. The $p$-value expresses the probability of observing a sample that is as or more deviant from null than the observed data if the null is true. Small $p$-values can thereby be considered as evidence against the null hypothesis, at least as long as the assumptions required for the validity of the test are satisfied. That is, the intercept parameter and the slope parameter for attitude are most likely not zero ($p$-values are less than $0.01$), whereas for the slope parameters of stra and surf we cannot reject the hypothesis that they are zero ($p$-values are larger than $0.05$). 
+
+The $F$-tests, for which the results are presented in the bottom row of the summary print, on the other tests the null hypothesis that all the non-intercept regression coefficients are zero (in general, $F$-test can be used to test other hypotheses as well, however). The $p$-value is very small, so all the slope coefficients are most likely not zero. Based on the above discussion on the $t$-tests, one of the non-zero slope coefficients seems to be the one of attitude.
+
+Because the coefficient for surface learning obtained the highest $p$-value from the $t$-test and does not have a statistically significant relation exam points when also relations to attitude and strategic learning are accounted for, we reduce the variable from the model, re-estimate, and check the summary statistics again:
+```{r}
+m2 <- update(m1, ~ .-surf)
+summary(m2)
+```
+As is shown in the above summary print, when surface learning was removed from the explanatory variables, strategic learning became statistically more significant. The $p$-value of the $t$-test is still more than $0.05$ but as it is less than $0.1$, strategic learning has some statistical significance in this model and we don't therefore remove it. Compared to the previous model with also surface learning as a regressor, an extra point in attitude or strategic learning now predicts $0.06$ exam points more. That is, ceteris paribus, one more point in attitude now predicts $3.47$ exam points more and strategic learning $0.91$ points. These two variables became (statistically) more significant after removing surface learning from the model because they are both (negatively) correlated with it, and therefore some of their relation to exam points was attributed to the surface learning in the full model. 
+
+The intercept parameter estimate got smaller and it is now approximately $9$. The model therefore predicts $9$ points in the exam for a student that has zero points in attitude and strategic learning. The multiple R-squared statistic tells what portion of the variation in the exam points can be explained by variation in the explanatory variables, attitude and strategic learning. The value is $0.20$ so our model is able to explain one fifth of the variation in the exam points. 
+
+Next, we examine residual plots in order to evaluate how well the model assumptions are satisfied.
+```{R}
+par(mfrow=c(1, 3), mar=c(2.6, 3.9, 2.6, 1))
+plot(m2, which=c(1, 2, 5))
+```
+First, examine the figure of residuals agains the fitted (on the left) which shows the scatter plot of the residuals against the fitted values. Residuals the empirical counterparts of the error terms, defined as the difference between the observations and fitted values. A residual in the zero line implies that the corresponding observation is equal to the fitted value and deviation from the zero line gives the observation's deviation from the fitted value. The red curvy line is a smoother that helps in discovering patterns in the residuals. If the relationship between the variables is linear, the smoother should be approximately straight, which it is. The assumption of constant error variance (conditionally on the regressors - which we used in the $t$- and $F$-tests) implies that there should not be any apparent changes in the variation of the residuals. There is slightly smaller variance at the end and the four largest negative residuals appear as larger variance just before the reduction in the variance, so the assumption of constant variance is not perfectly satisfied. Overall, the defects don't seem very serious, however.
+
+The figure in the middle is normal QQ plot in which the sample quantiles of standardized residuals (standardized to unit variance) are plotted against the theoretical quantiles of standard normal distribution. ...
+
+HUOM: ILMEISESTI PITÄÄ VIELÄ SELITTÄÄ JOSSAIN MIKÄ ON LINEAARINEN MALLI?
