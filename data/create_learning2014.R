@@ -5,14 +5,23 @@
 ## 2. ##
 ########
 
-# Read the full learning2014 data from the url:
+# We read the full learning2014 data from the url:
 learning2014_orig <- read.csv(url("https://www.mv.helsinki.fi/home/kvehkala/JYTmooc/JYTOPKYS3-data.txt"), sep="\t")
+
+# Pre-examine the data: 
+head(learning2014_orig, n=5)
+str(learning2014_orig)
+
+# The number of variables seems to be very large: in total 60 variables. 
+# In total there are 183 observations. Besides the variable gender, they are
+# all integer values. Most of them seem to be in the scale 1-5 but some variables
+# (Age, Attitude, Points) have larger scale. 
 
 ########
 ## 3. ##
 ########
 
-# Create an analysis dataset with the variables gender, age, attitude, deep, stra, surf and points by
+# We create an analysis dataset with the variables gender, age, attitude, deep, stra, surf and points by
 # combining questions in the learning2014_orig data.
 
 # Variables gender, age, and attitude are already included in the data as is. We therefore create three
@@ -29,12 +38,12 @@ create_var <- function(var_names) rowMeans(dplyr::select(learning2014_orig, any_
 
 # Finally, we construct the new dataset as instructed and remove respondents with exam points variable zero:
 learning2014 <- with(learning2014_orig, data.frame(gender=gender,
-                                       age=Age,
-                                       attitude=Attitude/10, # Also attitude is scaled back to 1-5
-                                       deep=create_var(deep_questions),
-                                       stra=create_var(strategic_questions),
-                                       surf=create_var(surface_questions),
-                                       points=Points))
+                                                   age=Age,
+                                                   attitude=Attitude/10, # Scale also attitude back to 1-5
+                                                   deep=create_var(deep_questions),
+                                                   stra=create_var(strategic_questions),
+                                                   surf=create_var(surface_questions),
+                                                   points=Points))
 learning2014 <- dplyr::filter(learning2014, points != 0) # Filter out the zero-point respondents
 str(learning2014) # 166 observations and 7 variables as should be.
 
