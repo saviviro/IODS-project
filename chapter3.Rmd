@@ -4,11 +4,11 @@ output: html_document
 ---
 
 # Logistic regression
-We consider a cross-sectional alcohol consumption data collected by schools reports questionnaires from Portuguese math and Portuguese language student's. Our dataset is constructed by joining the data from math and Portuguese language student's so that only individuals that participated both classes are included. The aata contains several variables which are printed out below:
+We consider a cross-sectional alcohol consumption data collected by schools reports questionnaires from Portuguese math and Portuguese language student's and it contains 370 observations for 35 variables. Our dataset is constructed by joining the data from math and Portuguese language student's so that only individuals that participated both classes are included. The aata contains several variables which are printed out below:
 ```{r, message=FALSE}
 # Read the data from Reijo Sund's github, as discussed in forum (370 observations, not 382):
 alc <- readr::read_csv("https://github.com/rsund/IODS-project/raw/master/data/alc.csv")
-alc <- alc[,-c(28:30, 37:48, 51)] # Remove unnecessary variables
+alc <- alc[,-c(28:30, 37:48, 51)] # Remove the unnecessary variables
 colnames(alc)
 ```
 The variable alc_use is mean of daily (Dalc) and weekly (Walc) usages (in the scale 1-5) and the variable "high_use" is a logical indicator stating whether the variable alc_use takes a value larger than 2. The other variables include backround variables and well as the number of past class failures (failures) grades from the courses (G1 first period grade, G2 second period grade, G3 final grade). The full details about the data are available online at: https://archive.ics.uci.edu/ml/datasets/Student+Performance.
@@ -18,6 +18,7 @@ We are interested in studying the relationship of low/high usage of alcohol to t
 Before fitting the model, we examine the relations graphically. With the binary response variable, it seems appropriate the use boxplots that show summaries the distributions of the explanatory variables separately for students with high and low alcohol usage. The boxplots are presented below.
 ```{r, message=FALSE}
 # Load the required packages
+library(dplyr)
 library(ggplot2)
 library(GGally, quietly=TRUE)
 library(reshape2)
@@ -28,8 +29,80 @@ p <- ggplot(data = alc_melt, aes(x=variable, y=value)) + geom_boxplot(aes(fill=h
 p + facet_wrap( ~ variable, scales="free")
 ```
 
-As can be seen from the upper-left boxplot above, it appears that older students tend to drink more as suspected: the median age of high usage students is 17 while that is also the third age quartile of low usage students. There seems to be even stronger relation between going out a lot with friends and alcohol usage (upper-right boxplot). In the scale 1-5 (1 low, 5 high) 75% of low usage students go out with intensity at most 3 while 75% of high usage students go out with intensity at least 3. As the lower-left boxplot presents, the larger number of absences seems to also be related to high usage of alcohol, as our hypothesis predicted. The relation is not however as strong as with going out with friends. Finally, the lower-right box shows that high usage of alcohol seems to be related slightly lower final grade. While this result might seem unintuitive at first, it could be that the negative relation is due to that high-performing students don't drink that much in first place because of some common characteristic and not because drinking lot of alcohol makes you perform worse at school. Overall, 30% of the respondents is reported to have high alcohol usage, leaving 70% low usage respondents, as is calculated below.
+As can be seen from the upper-left boxplot above, it appears that older students tend to drink more as suspected: the median age of high usage students is 17 while that is also the third age quartile of low usage students. Moreover, there seems to be only two low-usage respondents that are 19 or older. There seems to be even stronger relation between going out a lot with friends and alcohol usage (upper-right boxplot) which is in line with our hypothesis. In the scale 1-5 (1 low, 5 high) 75% of low usage students go out with intensity at most 3 while 75% of high usage students go out with intensity at least 3. As the lower-left boxplot presents, the larger number of absences seems to also be related to high usage of alcohol, as our hypothesis predicted. The relation is not however as strong as with going out with friends. Finally, the lower-right box shows that high usage of alcohol seems to be related slightly lower final grade, contradicting our earlier prediction. While this result might seem unintuitive at first, it could be that the negative relation is due to that high-performing students don't drink that much in first place because of some common characteristic and not because drinking lot of alcohol makes you perform worse at school. Overall, 30% of the respondents is reported to have high alcohol usage, leaving 70% low usage respondents, as is calculated below.
 
 ```{r}
 mean(alc_melt$high_use)
+```
+
+Because the going out variables takes only five possible values, it might be appropriate to model it as a factor. Consequently, a more appropriate summary than a boxplot is a cross-tabulation. Below, the frequencies are scaled to relative proportions in the high/low usage groups.
+```{r}
+round(with(alc, table(goout, high_use)/c(rep(sum(!high_use), times=5), rep(sum(high_use), times=5))), 2)
+```
+As can be seen above, most of the low usage students go out with intensity 2 or 3 but most of the high usage student's with intensity 4 or 5. Clearly students that go out a lot with friends have high usage of alcohol more often the ones who don't go out with friends so very often.
+
+Having, studied summaries of the data, we shall next fit the logistic regression model. We treat the variables absences, age, and grade are continuous but goout as factor. Below are the summary statistics.
+```{r}
+fit <- glm(high_use ~ age + absences + G3 + factor(goout) - 1, data=alc, family="binomial")
+summary(fit)
+```
+Our logistic regression model is of the form 
+$$
+\text{logit}(Pr(\text{high_use}))=\beta_1\text{age} + \beta_2\text{absences} + \beta_3\text{G3} + \beta_4 \boldsymbol{1}\lbrace \text{goout}=1 \rbrace + \beta_5 \boldsymbol{1}\lbrace \text{goout}=2 \rbrace + \beta_6 \boldsymbol{1}\lbrace \text{goout}=3 \rbrace + \beta_7 \boldsymbol{1}\lbrace \text{goout}=4 \rbrace + \beta_8 \boldsymbol{1}\lbrace \text{goout}=5 \rbrace
+$$
+where $logit(p)=\log(p/(1-p))$ is the logit function (the inverse of the logistic function) and $\boldsymbol{1}\lbrace \text{goout}=i \rbrace$ is an indicator function that takes value one if $\text{goout}=i$ and zero otherwise. The regression coefficients and their estimates can thereby be interpreted as how much a unit increase in the corresponding explanatory variable increases the log-odds, in our case, the log-odds of student having a high alcohol usage. 
+
+For the goout variable we have five different coefficients: one for each answer in the scale 1-5. The interpretation is that the students in different goout classes have different intercepts - the log-odds the model predicts for a student with value zero for age, absences, and G3. Of course, predicting high alcohol usage for students that are zero years old is not sensible, so the interpretation is merely a theoretical one. A more practical interpretation is that a student with smaller intercept has smaller log-odds for high alcohol usage than a student who has the same values of age, absences, and G3, but larger intercept. 
+
+The odds-ratio is defined as 
+$$
+\frac{p_1/(1-p_1)}{p_2/(1-p_2)}
+$$
+where $p_j$ is the probability of high alcohol usage in group $j$. By taking logarithm we obtain
+$$
+\log\frac{p_1/(1-p_1)}{p_2/(1-p_2)} = \log\frac{p_1}{1-p_1} - \log\frac{p_2}{1-p_2},
+$$
+that is, the log-odds-ratio is positive if and only if the log-odds with $p_1$ is higher than the log-odds with $p_2$. This implies that the odds-ratio is more than one if and only if the log-odds with $p_1$ is higher than the log-odds with $p_2$.
+
+In terms of odds-ratio, the parameters of the model are therefore interpreted as follows. If the coefficient is positive (negative), then increasing the value of the corresponding variables makes the odds-ratio larger (less) than one when an individual with the increased (decreased) parameter value represents group 1 (with $p_1$ above) and an individual with the original value represents group 2 (with $p_2$ above). That is, the relative odds of having high use of alcohol increases (decreases). 
+
+Based on the above discussion on interpretation of the parameters, according our estimated model, larger age or more absences increases the odds of having high alcohol usage. This is in line with out hypotheses and the discussion related to graphical summaries of the data. Higher final grade (G3) decreases the odds, which is line with graphical summary but contradicts our hypothesis. For the going out variable (goout), it seems that the coefficient is larger the more often student goes out with friends. This means that the odds of high alcohol consumption is estimated to be larger for students who go out more, as was predicted by our hypothesis and by the graphical summary. 
+
+To get the coefficient estimates for odds (i.e. taking exponent from our model equation which induces an exponential multiplicative relationship between the odds and the explanatory variables), exponent of the estimates needs to be taken. Due to the multiplicative nature of the model for odds, exponents of the coefficients are then also the coefficients for the model for the odds-ratio. In the odds-ratio model, the interpretation of the coefficients is just for the difference between the values of the explanatory values in the two groups and not for the values themselves. Below, we calculate the exponents of the coefficients of the log-odds model (and thus obtain the coefficients for both, the odds model and the log-odds model) and calculate confidence intervals for the exponents coefficients.  
+```{r, message=FALSE}
+exp_coefs <- exp(coef(fit))
+ci_exp_coefs <- exp(confint(fit))
+round(cbind(exp_coefs, ci_exp_coefs), 3)
+```
+
+Next, we shall study the model's predictive power on the low/high alcohol usage. Before that, we exclude the statistically non-signigicant variables from the model. According to the t-tests, age and G3 are not significant so we remove them. The t-tests don't either give statistical significance for the five intercepts. However, one needs to careful when interpreting the tests for the factor intercepts, because the test is for the null of the coefficient being zero, not for the null whether the groups are different to each other. To investigate more, we fit a new model with age and G3 removed and now including an intercept and in doing so the intercept parameter becomes the intercept for the variable going out at intensity one. 
+```{r}
+fit2 <- glm(high_use ~ absences + factor(goout), data=alc, family="binomial")
+summary(fit2)
+```
+As can be seen from the above summary printout, the intercept and factors for going out at intensities 4 and 5 became statistically significant. This was not due to excluding some of the variables but because the interpretation of the goout factors is now relative to group one and the difference relative to group one is statistically significant as it is far apart from zero. If one adds together the intercept and the coefficient for $\text{goout}=4$ or $5$, it can be found that the intercepts for groups 4 and 5 are also in this model close to zero. 
+
+To study how well the model predicts high alcohol usage, we calculate the predicted probabilities and then assume that model predicts high usage if the probability is more than $0.5$. After that, it can be calculated what is the average probability for the model to predict correctly. The cases of high/low use are tabulated below with the predictions:
+```{r}
+probs <- predict(fit2, type="response")
+alc <- mutate(alc, probability=probs) %>% mutate(prediction = probability > 0.5)
+(mytab <- with(alc, table(high_use, prediction)) %>% prop.table %>% addmargins)
+```
+As shown above, according to the predictions of our model, $78\%$ of the respondents are low alcohol users while $70\%$ of the respondents are actually low alcohol users. Similarly, our model predicts high usage for $22\%$ of the respondents while $30\%$ are actually high users. The model in data camp predicts that $90\%$ of the users are low alcohol users and $10\%$ high. Although the data in datacamp is slightly different, the relative proportions of high/low alcohol users are approximately same, so our model is much better according to this in-sample prediction criteria. 
+
+The total portion of inaccurately classified individuals is in our model:
+```{r}
+with(alc, mean(!high_use - !prediction))
+```
+That is, approximately $25\%$.
+
+Finally, we do a 10-fold cross-validation in order to further compare our model to the data camp model:
+```{r}
+library(boot)
+set.seed(1)
+loss_func <- function(class, prob) mean(abs(class - prob) > 0.5)
+cv <- cv.glm(data = alc, cost = loss_func, glmfit = fit2, K = 10)
+cv$delta[1] # average number of wrong predictions in the cross validation
 ````
+
+The error-portion is slightly higher than the data camp model (approximately $0.27$ when it is approximately $0.26$ in the data camp model) but with different random number generator seeds the error is sometimes close $0.26$ so there is no big difference in performance according to this out-of-sample prediction criteria.
