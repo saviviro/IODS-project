@@ -18,6 +18,8 @@ colnames(math) == colnames(por) # The variables seem to be the same in both data
 #    we nevertheless do the join with the identifiers given in the assignment).
 join_by <- c("school", "sex", "age", "address", "famsize", "Pstatus", "Medu",
              "Fedu", "Mjob", "Fjob", "reason", "nursery","internet")
+#free_cols <- c("failures","paid","absences","G1","G2","G3")
+#join_by <- setdiff(colnames(por), free_cols) # Larger set of identifiers - as in Reijo Sund's code
 math_por <- inner_join(math, por, by=join_by)
 
 # 5. We combine dublicate answers to the new data by taking the mean
@@ -39,6 +41,6 @@ for(col_name in not_joined_cols) {
 alc <- mutate(alc, alc_use = (Dalc+Walc)/2) %>% mutate(high_use = alc_use > 2)
 
 # 7. Glimpse the data and save it:
-glimpse(alc)
+glimpse(alc) # 382 observations and 35 variables
 write.csv(alc, file="data/alc.csv", row.names=FALSE)
 

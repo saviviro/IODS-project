@@ -390,6 +390,7 @@ summary {
 <li><a href="#introduction-to-open-data-science---course-project">Introduction to Open Data Science - Course Project</a></li>
 <li><a href="#about-the-project">About the project</a></li>
 <li><a href="#regression-and-model-validation">Regression and model validation</a></li>
+<li><a href="#logistic-regressions">Logistic regressions</a></li>
 </ul>
 </div>
 
@@ -403,7 +404,7 @@ summary {
 <p>I first came across this course in its early phases when I was doing my bachelor studies. Later in my doctoral studies, I found out from a colleague that this course can be included in the general competence studies and decided to take advantage of the opportunity. I’m convinced that this course is one the most useful options for me and also for many of the fellow researchers working with data.</p>
 <p>Here is the link to my Github repository: <a href="https://github.com/saviviro/IODS-project" class="uri">https://github.com/saviviro/IODS-project</a></p>
 <pre class="r"><code>date()</code></pre>
-<pre><code>## [1] &quot;Thu Nov  5 11:45:48 2020&quot;</code></pre>
+<pre><code>## [1] &quot;Wed Nov 11 13:27:16 2020&quot;</code></pre>
 <hr />
 </div>
 <div id="regression-and-model-validation" class="section level1">
@@ -514,7 +515,12 @@ plot(m2, which=c(1, 2, 5))</code></pre>
 <p>The figure in the middle is normal QQ plot in which the sample quantiles of standardized residuals (standardized by dividing by their estimated standard errors) are plotted against the theoretical quantiles of standard normal distribution. If the errors are normally distributed, the points in the plot should all fall approximately on the straight dashed line (if the errors are independently and identically normally distributed, the standardized residuals actually follow a Student’s <span class="math inline">\(t\)</span> distribution. When sample size is large, the shape of the <span class="math inline">\(t\)</span>-distribution does not deviate much from standard normal, however). This is not exactly the case above: it seems that there are too much too small residuals and not enough large residuals. That is, the sample distribution of the residuals is skewed to the left and it has too fat lower tail but not fat enough upper tail. Nonetheless, the sample distribution seems normal enough to have some faith in the statistical tests discussed above.</p>
 <p>Finally, on the right we have the figure of standardized residuals plotted against their leverage. The leverage on the <span class="math inline">\(x\)</span>-axis measures how influential the observations corresponding to the residuals are in the ordinary least squares estimation: observations with larger influence affect the coefficient estimates more. Thus, if there are large residuals with large influence, they may significantly distort the regression line (or hyperplane - in our case a regression plane as there are two explanatory variables) from where it would be without the outlier(s). The red curve in the figure is a smoother that helps to detect patterns in the residuals. It should be an approximately straight horizontal line passing through origo to implicate that there are no distorting observations. Is can be seen, there is a small group of large negative residuals deviating from others but fortunately they are not very influential. The smoother seems also straight enough, so we may conclude that there does not seem to be very problematic influential outliers. In summary, the overall fit of the model and validity of the assumption of linear relationships and jointly normal independent errors with common variance seems reasonable but possibly not exactly satisfied.</p>
 <hr />
-<p>(more chapters to be added similarly as we proceed with the course!)</p>
+</div>
+<div id="logistic-regressions" class="section level1">
+<h1>Logistic regressions</h1>
+<pre class="r"><code>NULL</code></pre>
+<pre><code>## NULL</code></pre>
+<hr />
 </div>
 
 

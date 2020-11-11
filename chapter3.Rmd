@@ -1,0 +1,35 @@
+---
+title: "Logistic regression"
+output: html_document
+---
+
+# Logistic regression
+We consider a cross-sectional alcohol consumption data collected by schools reports questionnaires from Portuguese math and Portuguese language student's. Our dataset is constructed by joining the data from math and Portuguese language student's so that only individuals that participated both classes are included. The aata contains several variables which are printed out below:
+```{r, message=FALSE}
+# Read the data from Reijo Sund's github, as discussed in forum (370 observations, not 382):
+alc <- readr::read_csv("https://github.com/rsund/IODS-project/raw/master/data/alc.csv")
+alc <- alc[,-c(28:30, 37:48, 51)] # Remove unnecessary variables
+colnames(alc)
+```
+The variable alc_use is mean of daily (Dalc) and weekly (Walc) usages (in the scale 1-5) and the variable "high_use" is a logical indicator stating whether the variable alc_use takes a value larger than 2. The other variables include backround variables and well as the number of past class failures (failures) grades from the courses (G1 first period grade, G2 second period grade, G3 final grade). The full details about the data are available online at: https://archive.ics.uci.edu/ml/datasets/Student+Performance.
+
+We are interested in studying the relationship of low/high usage of alcohol to the other variables in the data. Because our response variable is binary, a suitable method is to employ a logistic regression model. Our hypothesis is that students who go out more with friends use more alcohol, so we choose one the explanatory variables to be "goout" which measures how often the students go out in the scale from 1 (very low) to 5 (very high). As a consequence of going out with friends and drinking alcohol, the student might decide to stay home the next day and we therefore include the variable "absences" (the number of school absences from 0 to 93) in the model as well. Moreover, because drinking alcohol is said to make people smarter (at least in Finland), we suspect that high grade could be associated with high use of alcohol and hereby include the variable "G3" (final grade 0-20) in our model. Finally, as the age distribution varies from 15-22 and young people might not have alcohol available for them and hence consume it less, we include the variable "age" in the model to control for this.
+
+Before fitting the model, we examine the relations graphically. With the binary response variable, it seems appropriate the use boxplots that show summaries the distributions of the explanatory variables separately for students with high and low alcohol usage. The boxplots are presented below.
+```{r, message=FALSE}
+# Load the required packages
+library(ggplot2)
+library(GGally, quietly=TRUE)
+library(reshape2)
+
+# Reform the data to produce the boxplots and then plot them.
+alc_melt <- melt(alc[,colnames(alc) %in% c("age","goout", "absences", "G3", "high_use")], id.var="high_use") 
+p <- ggplot(data = alc_melt, aes(x=variable, y=value)) + geom_boxplot(aes(fill=high_use))
+p + facet_wrap( ~ variable, scales="free")
+```
+
+As can be seen from the upper-left boxplot above, it appears that older students tend to drink more as suspected: the median age of high usage students is 17 while that is also the third age quartile of low usage students. There seems to be even stronger relation between going out a lot with friends and alcohol usage (upper-right boxplot). In the scale 1-5 (1 low, 5 high) 75% of low usage students go out with intensity at most 3 while 75% of high usage students go out with intensity at least 3. As the lower-left boxplot presents, the larger number of absences seems to also be related to high usage of alcohol, as our hypothesis predicted. The relation is not however as strong as with going out with friends. Finally, the lower-right box shows that high usage of alcohol seems to be related slightly lower final grade. While this result might seem unintuitive at first, it could be that the negative relation is due to that high-performing students don't drink that much in first place because of some common characteristic and not because drinking lot of alcohol makes you perform worse at school. Overall, 30% of the respondents is reported to have high alcohol usage, leaving 70% low usage respondents, as is calculated below.
+
+```{r}
+mean(alc_melt$high_use)
+````
