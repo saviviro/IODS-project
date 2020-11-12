@@ -79,7 +79,7 @@ Dividing the model implied odds for students with certain characteristics (group
 $$
 \frac{p_1/(1-p_1)}{p_2/(1-p_2)} = (e^{\beta_1})^{(x_1^{(1)} - x_1^{(2)})} \cdots (e^{\beta_8})^{(x_8^{(1)} - x_8^{(2)})}
 $$
-Consequently, exponents of the coefficients are then also the coefficients for the model for the odds-ratio. In the above odds-ratio model, the interpretation of the coefficients is just for the difference between the values of the explanatory values in the two groups and not for the values themselves, and similarly to the model for odds they are interpreted as exponent bases for the (differences between) explanatory variables. Below, we calculate the exponents of the coefficients of the log-odds model (and thus obtain the coefficients for both, the odds model and the odds-ratio model) and calculate confidence intervals for the exponents coefficients.  
+where $x_i^{(j)$ is the value of the $i$th explanatory variable in group $j$. Consequently, exponents of the coefficients are then also the coefficients for the model for the odds-ratio. In the above odds-ratio model, the interpretation of the coefficients is just for the difference between the values of the explanatory values in the two groups and not for the values themselves, and similarly to the model for odds they are interpreted as exponent bases for the (differences between) explanatory variables. Below, we calculate the exponents of the coefficients of the log-odds model (and thus obtain the coefficients for both, the odds model and the odds-ratio model) and calculate confidence intervals for the exponents coefficients.  
 ```{r, message=FALSE}
 exp_coefs <- exp(coef(fit))
 ci_exp_coefs <- exp(confint(fit))
