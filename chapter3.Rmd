@@ -47,9 +47,10 @@ fit <- glm(high_use ~ age + absences + G3 + factor(goout) - 1, data=alc, family=
 summary(fit)
 ```
 Our logistic regression model is of the form 
-$$
-\text{logit}(Pr(\text{high_use}))=\beta_1\text{age} + \beta_2\text{absences} + \beta_3\text{G3} + \beta_4 \boldsymbol{1}\lbrace \text{goout}=1 \rbrace + \beta_5 \boldsymbol{1}\lbrace \text{goout}=2 \rbrace + \beta_6 \boldsymbol{1}\lbrace \text{goout}=3 \rbrace + \beta_7 \boldsymbol{1}\lbrace \text{goout}=4 \rbrace + \beta_8 \boldsymbol{1}\lbrace \text{goout}=5 \rbrace
-$$
+\begin{align*}
+\text{logit}(Pr(\text{high_use})) =&\beta_1\text{age} + \beta_2\text{absences} + \beta_3\text{G3} + \beta_4 \boldsymbol{1}\lbrace \text{goout}=1 \rbrace + \beta_5 \boldsymbol{1}\lbrace \text{goout}=2 \rbrace + \beta_6 \boldsymbol{1}\lbrace \text{goout}=3 \rbrace \\
+&+ \beta_7 \boldsymbol{1}\lbrace \text{goout}=4 \rbrace + \beta_8 \boldsymbol{1}\lbrace \text{goout}=5 \rbrace
+\end{align*}
 where $logit(p)=\log(p/(1-p))$ is the logit function (the inverse of the logistic function) and $\boldsymbol{1}\lbrace \text{goout}=i \rbrace$ is an indicator function that takes value one if $\text{goout}=i$ and zero otherwise. The regression coefficients and their estimates can thereby be interpreted as how much a unit increase in the corresponding explanatory variable increases the log-odds, in our case, the log-odds of student having a high alcohol usage. 
 
 For the goout variable we have five different coefficients: one for each answer in the scale 1-5. The interpretation is that the students in different goout classes have different intercepts - the log-odds the model predicts for a student with value zero for age, absences, and G3. Of course, predicting high alcohol usage for students that are zero years old is not sensible, so the interpretation is merely a theoretical one. A more practical interpretation is that a student with smaller intercept has smaller log-odds for high alcohol usage than a student who has the same values of age, absences, and G3, but larger intercept. 
@@ -68,7 +69,17 @@ In terms of odds-ratio, the parameters of the model are therefore interpreted as
 
 Based on the above discussion on interpretation of the parameters, according our estimated model, larger age or more absences increases the odds of having high alcohol usage. This is in line with out hypotheses and the discussion related to graphical summaries of the data. Higher final grade (G3) decreases the odds, which is line with graphical summary but contradicts our hypothesis. For the going out variable (goout), it seems that the coefficient is larger the more often student goes out with friends. This means that the odds of high alcohol consumption is estimated to be larger for students who go out more, as was predicted by our hypothesis and by the graphical summary. 
 
-To get the coefficient estimates for odds (i.e. taking exponent from our model equation which induces an exponential multiplicative relationship between the odds and the explanatory variables), exponent of the estimates needs to be taken. Due to the exponential multiplicative nature of the model for odds, exponents of the coefficients are then also the coefficients for the model for the odds-ratio. In the odds-ratio model, the interpretation of the coefficients is just for the difference between the values of the explanatory values in the two groups and not for the values themselves. Below, we calculate the exponents of the coefficients of the log-odds model (and thus obtain the coefficients for both, the odds model and the log-odds model) and calculate confidence intervals for the exponents coefficients.  
+To get the coefficient estimates for odds, exponent of the estimates needs to be taken, as the following shows. By taking exponent of the model equation $\log(p/(1-p)) = \beta_1x_1 + \cdots + \beta_8x_8$ where $x_1,..,x_8$ are the regressors, we obtain the model for the odds as
+$$
+p/(1-p) = (e^{\beta_1})^{x_1} \cdots (e^{\beta_8})^{x_8}
+$$
+so the exponents of the coefficients are interpreted as the exponent bases for the explanatory variables. 
+
+Dividing the model implied odds for students with certain characteristics (group 1 with probability of high alcohol usage $p_1$) by odds for students with different characteristics (group 2 with probability of high alcohl usage $p_2$) then gives the model for odds-ratio as
+$$
+\frac{p_1/(1-p_1)}{p_2/(1-p_2)} = (e^{\beta_1})^{(x_1^{(1)} - x_1^{(2)})} \cdots (e^{\beta_8})^{(x_8^{(1)} - x_8^{(2)})}
+$$
+Consequently, exponents of the coefficients are then also the coefficients for the model for the odds-ratio. In the above odds-ratio model, the interpretation of the coefficients is just for the difference between the values of the explanatory values in the two groups and not for the values themselves, and similarly to the model for odds they are interpreted as exponent bases for the (differences between) explanatory variables. Below, we calculate the exponents of the coefficients of the log-odds model (and thus obtain the coefficients for both, the odds model and the odds-ratio model) and calculate confidence intervals for the exponents coefficients.  
 ```{r, message=FALSE}
 exp_coefs <- exp(coef(fit))
 ci_exp_coefs <- exp(confint(fit))
