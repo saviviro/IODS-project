@@ -59,7 +59,7 @@ We want to classify the towns according to their crime rates using linear discri
 ```{r, message=FALSE}
 library(dplyr)
 crime <- with(boston_scaled, cut(crim, breaks = quantile(crim), include.lowest = TRUE, label=c("low", "med_low", "med_high", "high")))
-boston_scaled <- select(boston_scaled, -crim) %>% cbind(crime)
+boston_scaled <- dplyr::select(boston_scaled, -crim) %>% cbind(crime)
 which_train <- sample(nrow(boston_scaled), size=0.8*nrow(boston_scaled), replace=FALSE)
 train <- boston_scaled[which_train,]
 test <- boston_scaled[-which_train,]
@@ -91,12 +91,12 @@ The arrows in the above LDA biplot are determined by the coefficients in the LDA
 Next, we examine how well our model performs in out-of-sample predictions with the test data. In particalur, the model estimated to the train data is used to predict crime rate classes for test set.
 ```{r}
 classes_test <- test$crime
-test <- select(test, -crime)
+test <- dplyr::select(test, -crime)
 pred <- predict(fit, newdata=test)
 table(correct=classes_test, predicted=pred$class)
 ```
 
-The above tabulation shows the correct test data classes against the predicted ones. Overall, the performance seems reasonable but especially many of the low crime rate towns were inaccurately classified as med_low crime rate towns. There is also notable inaccuracies in differentiating med_low towns from med_high towns. The high crime rate tows were, however, predicted perfectly: all the high crime towns were classified as high crime towns and no town that does not have high crime rate was classified as high crime town. 
+The above tabulation shows the correct test data classes against the predicted ones. Overall, the performance seems reasonable but especially many of the low crime rate towns were inaccurately classified as med_low crime rate towns and many of the med_high towns were incorrectly classified as med_low towns. The high crime rate tows were, however, predicted almost perfectly: all except one high crime town were classified as high crime towns and no town that does not have high crime rate was classified as high crime town. 
 
 We then cluster the observations with the k-means algorithm; that is, we do not specify beforehand any classes for the observations but let the algorithm to find clusters. For that, we create a new standardized data set that contains all the original variables, then run the k-means algorithm with it using different numbers of clusters, and examine the total within cluster sums of squares. 
 ```{r}
@@ -114,6 +114,7 @@ The above figure presents the total within cluster sums of squares (TWSS) with d
 
 The two clusters can be visualized in a scatter plot matrix as:
 ```{r}
+par(las=1)
 nk <- 2
 pairs(boston_scaled2, gap=0.2, font.labels=2, upper.panel=function(x, y) {
   points(x, y, col=c("blue", "red")[all_km[[nk]]$cluster], pch=".", cex=1.5)
