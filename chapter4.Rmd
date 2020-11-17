@@ -32,7 +32,7 @@ Interpreting the summary figure above, the sample correlations and the regressio
 
 Some cluster of observation units for individual variables can also be detected from the data. For instance, rad seems to be either small or large and tax is either low, medium-low, or high. The variable chas indicates clustering at the first look as well but it is actually an indicator variable so the "clusters" are just indicating whether the variable is zero or one.
 
-In order to examine distributions of the variables, we shall draw their histograms (scaled to density distributions) together with estimated standard normal density graph. 
+In order to examine distributions of the variables, we shall draw their histograms (scaled to density distributions) together with estimated normal density graph. 
 
 ```{r}
 par(mfrow=c(3, 5), mar=c(2.6, 2.6, 3, 1)) # Set graphical parameters
