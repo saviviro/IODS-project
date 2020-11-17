@@ -131,7 +131,7 @@ pairs(boston_scaled2, gap=0.2, font.labels=2, upper.panel=function(x, y) {
 
 The figure shows that the variables rad and tax are mainly clustered to a clusters of low and high values. The other variables seem to be also clustered to clusters of observations that are close to each other: there is not so much mixing of red and blue colors in the scatter plots. Often the clusters are not just approximately separated but also exhibit common patterns. For example, in the first row of the scatter plot matrix, the red dots (observations in the second cluster) are often in a vertical line or scattered, while the blue dots (observations in the first cluster) are in a horizontal line in the bottom. That is, the first cluster contains most of the towns with very low crime rate while the second cluster contains the rest. One disappointment, however, is that the dummy variable chas did not cluster into zero and ones but instead there are ones and zeros in both clusters. 
 
-Finally, we will compare k-means clusters to the LDA classification drawing 3D figures of projections of the data points with the different classifications or clusters separated by different colors. First, we do it for the LDA model (with the dummy variable chas included as a predictor):
+Finally, we will compare k-means clusters to the LDA classification drawing 3D figures of (LDA based) projections of the data points with the different classifications or clusters separated by different colors. First, we do it for the LDA model (with the dummy variable chas included as a predictor):
 ```{r, message=FALSE, warning=FALSE}
 model_predictors <- dplyr::select(train, -crime)
 # check the dimensions
@@ -146,11 +146,11 @@ library(plotly)
 plot_ly(x = matrix_product$LD1, y = matrix_product$LD2, z = matrix_product$LD3, type= 'scatter3d', mode='markers', color=as.numeric(train$crime))
 
 ```
-Then we draw the same for k-means clustering, using four clusters as there are four crime rate classes in the LDA model.
+Then we draw the same plot but with the colored clusters chosen by k-means clustering, using four clusters as there are four crime rate classes in the LDA model.
 ```{r, message=FALSE}
 km4 <- kmeans(boston_scaled2[which_train,], centers=4, nstart=10) # 4 clusters
 cl <- km4$cluster 
-cl[cl == 1] <- 5 # Re-code the cluster numbers so that the colors match the previous plot
+cl[cl == 1] <- 5 # Recode the cluster numbers so that the colors match the previous plot
 cl[cl == 4] <- 1
 cl[cl == 5] <- 4
 plot_ly(x = matrix_product$LD1, y = matrix_product$LD2, z = matrix_product$LD3, type= 'scatter3d', mode='markers', color=cl)
