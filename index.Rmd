@@ -3,7 +3,8 @@ title: "IODS course project"
 author: "Savi Virolainen"
 output:
   html_document:
-    theme: cosmo
+    theme: darkly
+    highlight: breezedark
     toc: true
     toc_depth: 2
     fig_caption: true
