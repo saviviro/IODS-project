@@ -28,9 +28,9 @@ pairs(Boston, gap=0.2, font.labels=2, upper.panel=function(x, y) {
   })
 ```
 
-Interpreting the summary figure above, the sample correlations and the regression lines reveal possible linear relations among the variables, as long the scatter plots themselves don't indicate that the relation is unlinear. Some of the linear relations are rather strong in that the correlation between the variables is more than 0.7 in absolute value. Such high correlations are bolded in the above figure and the highest correlation (0.91) is found between variables rad (index of accessibility to radial highways) and tax (full-value property-tax rate per \$10,000.). This high correlation, however, seems to be because of the two clusters being mainly in the opposite corners, while the cluster in the upper-right corner (high tax and high rad) contains notable less observations than the other cluster in the lower-left corner. Sample correlation does not therefore give a good summary of the relationship that is better explained with the two clusters.
+Interpreting the summary figure above, the sample correlations and the regression lines reveal possible linear relations among the variables, as long the scatter plots themselves don't indicate that the relation is unlinear. Some of the linear relations are rather strong in that the correlation between the variables is more than 0.7 in absolute value. Such high correlations are bolded in the above figure and the highest correlation (0.91) is found between variables rad (index of accessibility to radial highways) and tax (full-value property-tax rate per \$10,000.). This high correlation, however, seems to be because of the two clusters being mainly in the opposite corners, while the cluster in the upper-right corner (high tax and high rad) contains notably less observations than the other cluster in the lower-left corner. Sample correlation does not therefore give a good summary of the relationship that is better explained with the two clusters.
 
-Some cluster of observation units for individual variables can also be detected from the data. For instance, rad seems to be either small or large and tax is either low, medium-low, or high. The variable chas indicates clustering at the first look as well but it is actually an indicator variable so the "clusters" are just indicating whether the variable is zero or one.
+Some clustering of observation units for individual variables can also be detected from the data. For instance, rad seems to be either small or large and tax is either low, medium-low, or high. The variable chas indicates clustering at the first look as well but it is actually an indicator variable so the "clusters" are just indicating whether the variable is zero or one.
 
 In order to examine distributions of the variables, we shall draw their histograms (scaled to density distributions) together with estimated normal density graph. 
 
@@ -55,11 +55,12 @@ apply(boston_scaled, 2, var) # Sample variance of each variable
 ```
 As the above summaries show, the sample mean of each variable is now zero and the sample variance is one.
 
-We want to classify the towns according to their crime rates and then use linear discriminant analysis (LDA) to classify out-of-sample towns, i.e., predict their crime rate class. Therefore, we need to create a categorical type variable from the crime rate that defines the classes to which towns will be assigned: we use sample quantiles as the break points because then by construction there will be (at least almost) equal amounts of observations in each category. After that, we drop the old crime rate variable from the data and add the categorical rate to replace it. Finally, we randomly divide the data into train (80% of towns) and test (20% of towns) sets so that we may evaluate how well our model predicts the crime rate categories in the test set based on estimation on the train set.
+We want to classify the towns according to their crime rates and then use linear discriminant analysis (LDA) to classify out-of-sample towns, i.e., predict their crime rate class. Therefore, we need to create a categorical type variable from the crime rate that defines the classes to which towns will be assigned. We use sample quantiles as the break points because then by construction there will be (at least almost) equal amounts of observations in each category. After that, we drop the old crime rate variable from the data and add the categorical rate to replace it. Finally, we randomly divide the data into train (80% of towns) and test (20% of towns) sets so that we may evaluate how well our model predicts the crime rate categories in the test set based on estimation on the train set.
 ```{r, message=FALSE}
 library(dplyr)
 set.seed(42) # Initialize random number generator
-crime <- with(boston_scaled, cut(crim, breaks = quantile(crim), include.lowest = TRUE, label=c("low", "med_low", "med_high", "high")))
+crime <- with(boston_scaled, cut(crim, breaks = quantile(crim), include.lowest = TRUE,
+                                 label=c("low", "med_low", "med_high", "high")))
 boston_scaled <- dplyr::select(boston_scaled, -crim) %>% cbind(crime)
 which_train <- sample(nrow(boston_scaled), size=0.8*nrow(boston_scaled), replace=FALSE)
 train <- boston_scaled[which_train,]
@@ -74,13 +75,13 @@ fit <- lda(crime ~. -chas, data=train)
 And then draw the LDA biplot:
 ```{r}
 # The function for lda biplot arrows
-lda.arrows <- function(x, myscale = 2, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
+lda.arrows <- function(x, myscale = 2, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1, 2)){
   heads <- coef(x)
-  arrows(x0 = 0, y0 = 0, 
-         x1 = myscale * heads[,choices[1]], 
-         y1 = myscale * heads[,choices[2]], col=color, length = arrow_heads)
-  text(myscale * heads[,choices], labels = row.names(heads), 
-       cex = tex, col=color, pos=3)
+  arrows(x0=0, y0=0, 
+         x1=myscale*heads[,choices[1]], 
+         y1=myscale*heads[,choices[2]], col=color, length=arrow_heads)
+  text(myscale*heads[,choices], labels=row.names(heads), 
+       cex=tex, col=color, pos=3)
 }
 classes <- as.numeric(train$crime) # Classifications of the observations
 plot(fit, dimen=2, col=classes, pch=classes) # LDA biplot without arrows
@@ -106,11 +107,12 @@ table(correct=classes_test, predicted=pred2$class)
 ```
 The performance seems to be almost the same but just slightly worse (two observations more classified wrongly). There is some randomness caused by the random division of the train and tests sets involved, however, so no strong conclusions can be made based on this simple analysis. For more reliable results, one should construct a loss function for the predictions, repeat the procedure many times with different divisions of train and test tests, and finally examine how the distributions of the values of the loss functions differ in both cases.
 
-We then cluster the observations with the k-means algorithm; that is, we do not specify beforehand any classes for the observations but let the algorithm to find clusters. For that, we create a new standardized dataset that contains all the original variables, then run the k-means algorithm with it using different numbers of clusters, and examine the total within cluster sums of squares. 
+We then cluster the observations with the k-means algorithm; that is, we do not specify beforehand any classes for the observations but let the algorithm to find the clusters. For that, we create a new standardized dataset that contains all the original variables, then run the k-means algorithm with it using different numbers of clusters, and examine the total within cluster sums of squares. 
 ```{r}
 # data(Boston) # It is useless to reload the same data again when we did not change it.
 boston_scaled2 <- as.data.frame(scale(Boston))
-dist_eu <- dist(boston_scaled2, method="euclidean") # Calculate (eucledian) distances between the observations as said in the assignment (this seems rather random, though)
+dist_eu <- dist(boston_scaled2, method="euclidean") # Calculate (euclidean) distances between
+            # the observations as said in the assignment (this seems rather random, though)
 set.seed(1) # Initialize the random number generator
 all_k <- 1:10
 all_km <- lapply(all_k, function(k) kmeans(boston_scaled2, centers=k, nstart=10))
@@ -143,7 +145,8 @@ matrix_product <- as.data.frame(matrix_product)
 
 # Plot
 library(plotly)
-plot_ly(x = matrix_product$LD1, y = matrix_product$LD2, z = matrix_product$LD3, type= 'scatter3d', mode='markers', color=as.numeric(train$crime))
+plot_ly(x = matrix_product$LD1, y = matrix_product$LD2, z = matrix_product$LD3,
+        type= 'scatter3d', mode='markers', color=as.numeric(train$crime))
 
 ```
 Then we draw the same plot but with the colored clusters chosen by k-means clustering, using four clusters as there are four crime rate classes in the LDA model.
@@ -153,8 +156,9 @@ cl <- km4$cluster
 cl[cl == 1] <- 5 # Recode the cluster numbers so that the colors match the previous plot
 cl[cl == 4] <- 1
 cl[cl == 5] <- 4
-plot_ly(x = matrix_product$LD1, y = matrix_product$LD2, z = matrix_product$LD3, type= 'scatter3d', mode='markers', color=cl)
+plot_ly(x = matrix_product$LD1, y = matrix_product$LD2, z = matrix_product$LD3,
+        type= 'scatter3d', mode='markers', color=cl)
 
 ```
 
-Comparison of the above 3D plots shows that the projection of the k-means clusters seem quite similar to the LDA. The main difference seems to be that in k-means the groups 1 and 2 are more separated while in the LDA the observations are somewhat mixed.
+Comparison of the above 3D plots shows that the projection with the k-means clusters seem quite similar to the LDA. The main difference seems to be that in k-means the groups 1 and 2 are more separated while in the LDA the observations are somewhat mixed.

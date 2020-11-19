@@ -24,7 +24,8 @@ library(GGally, quietly=TRUE)
 library(reshape2)
 
 # Reform the data to produce the boxplots and then plot them.
-alc_melt <- melt(alc[,colnames(alc) %in% c("age","goout", "absences", "G3", "high_use")], id.var="high_use") 
+alc_melt <- melt(alc[,colnames(alc) %in% c("age","goout", "absences", "G3", "high_use")],
+                 id.var="high_use") 
 p <- ggplot(data = alc_melt, aes(x=variable, y=value)) + geom_boxplot(aes(fill=high_use))
 p + facet_wrap( ~ variable, scales="free")
 ```
