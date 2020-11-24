@@ -1,0 +1,141 @@
+---
+title: "Dimensionality reduction techniques"
+author: "Savi Virolainen"
+date: "11/24/2020"
+output: 
+  html_document:
+    theme: darkly
+    highlight: breezedark
+---
+
+# Dimensionality reduction techniques
+We consider the "human" data described in the R script "create_human.R".
+```{r}
+human <- read.csv("data/human.csv", row.names=1)
+```
+
+We start by examining the data through graphical summary. 
+```{r, message=FALSE}
+# Create the summary plot
+par(las=1)
+pairs(human, gap=0.2, font.labels=2, cex.labels=1, upper.panel=function(x, y) {
+  points(x, y, col="blue", pch=".", cex=1.5)
+  abline(lm(y ~ x), col="red")
+  },
+  lower.panel=function(x, y) {
+    old_par <- par(no.readonly=TRUE)
+    on.exit(old_par)
+    par(usr=c(0, 1, 0, 1))
+    ncol <- 10
+    colpal <- colorRampPalette(c("skyblue", "blue", "red", "red4"))(ncol)
+    corcol <- abs(round(ncol*cor(x, y)))
+    do.call(rect, c(col=colpal[corcol], list(0, 0, 1, 1)))
+    text(x=0.5, y=0.5, labels=round(cor(x, y), 2), font=ifelse(abs(cor(x, y)) > 0.7, 4, 1),
+         cex=1.2)
+  })
+```
+
+The above summary matrix shows scatter plots of the variables together with fitted regression line in the upper right triangle and correlations between the variables in the lower left triangle. Correlations larger than 0.7 are in bold and deep red color indicates the correlation is high while light blue or white indicates that it is low. As can be seen from the above graph, the variable percparliament is not strongly related with any of the other variables and neither is labor ratio (females/males). The strongest linear relation seems to be between life expectancy and maternal mortality: higher life expectancy is related to lower maternal mortality. There is also strong positive correlation between expexted years of education and life expectancy, as well as between maternal mortality and teen birth rate. There is high negative correlation between expected education and maternal mortality, as well as between expected years of education and teen birth rate. 
+
+In order to examine distributions of the variables, we shall draw their histograms (scaled to density distributions) together with estimated normal density graph. 
+
+```{r}
+par(mfrow=c(2, 4), mar=c(2.6, 2.6, 3, 1)) # Set graphical parameters
+for(i1 in 1:ncol(human)) { # Go through the variables
+  dat <- human[,i1]
+  tmp <- hist(dat, col="skyblue", breaks=15, freq=FALSE,
+              main=colnames(human[i1]))
+  x <- seq(from=min(tmp$breaks), to=max(tmp$breaks), length.out=200) 
+  lines(x=x, y=dnorm(x, mean=mean(dat), sd=sd(dat)), lwd=2)
+}
+```
+
+As is seen from above, besides the expected years of education, the marginal distributions of the variables seem strongly non-Gaussian. In particular, the distributions of GNI, maternal mortality, and teen birth rate are skewed to the right (lots of low-value observations and less high-value). The other distributions seem skewed as well but there are some observations in both tails.
+
+Next, we carry out a principal component analysis (PCA) to non-standardized human data and examine the summary:
+```{r warning=FALSE}
+pca1 <- prcomp(human)
+summary(pca1)
+```
+The summary shows the variability captured by the principal components. In the first line the standard deviations of the principal components are shown, in the second line proportions of variances are shown and cumulative proportions are in the last line. It sticks out from the summary printout that the first principal component absolutely dominates.
+
+Then, we draw a biplot of the PCA:
+```{r warning=FALSE}
+biplot(pca1, cex=c(0.5, 0.7), col = c("blue", "deeppink2"), las=1)
+```
+
+__Caption:__ Biplot presenting the first two principal components obtained from applying principal component analysis based on singular value decomposition on non-standardized human data. The arrows represent the original variables.
+
+It appears that the variable GNI has dominantly the largest proportional standard deviation compared to the other variables. This is because it attains very large values (from 581 to 123124) while the other variables vary in smaller scale. Moreover, because the arrow of GNI is almost exactly horizontal it is strongly contributing to the first principal component (this can be verified by checking the loadings). Lengths or angles of the other arrows cannot be detected from the biplot. It seems apparent that the variables should thereby be standardized, so we do that and repeat the principal component analysis and draw the biplot again.
+
+```{r warning=FALSE}
+pca2 <- prcomp(scale(human))
+biplot(pca2, cex=c(0.5, 0.7), col = c("blue", "deeppink2"), las=1)
+```
+
+__Caption:__ Biplot presenting the first two principal components obtained from applying principal component analysis based on singular value decomposition on standardized human data. The arrows represent the original variables.
+
+With standardized data the biplot seems more sensible and the all the variables seem to have role in the PCA. The variables perparliament and labratio are mainly contributing to the second principal component as they are nearly vertical, whereas the other variables are contributing to the first principal component as they are nearly horizontal. Furthermore, because the angle between percparliament or labratio and the other variables is near 90 degrees, the correlation between percparliament or labratio and the other variables is very small, as was already noted in our graphical examinations. The other variables whose arrows are closely together are highly correlated with each other while approximately 180 degrees angle indicates a high negative correlation. That is, in addition to the bundle of percparliament and labratio, there are two bundles in which variables are relatively strongly positively correlated with each other, and variables in the two bundles are relative strongly negatively correlated with variables in the other bundle. Finally, another notable feature of the biplot is that all the arrows are approximately of the same length which means that in the standardized data the proportional standard deviations are approximately the same.
+
+To interpret the first two principal components, we first check their loadings:
+```{r}
+round(pca2$rotation[,1:2], 3)
+```
+The loadings of the first principal component show that it approximately consists of all the other variables than labratio and percparliament, while these variables also have approximately the same importance in the first PC. The second principal component, on the other hand, mostly consists of labratio and perparliament only while the two variables also carry approximately the same importance in it. The interpretations are therefore that the second principal component captures some of the variation caused by labratio and perparliament with approximately equal contribution (between the two variables) and the first principal component captures some of the variation caused by the rest of the variables with approximately equal contribution (between the variables).
+
+As the summary shows:
+```{r}
+summary(pca2)
+```
+The portion of variance captured by the first PC is approximately 0.54 and by the second one 0.16 so together they capture 0.7 percent. 
+
+Next, we consider a "tea" data and do a multiple correspondence analysis (MCA) to analyze the relationships of the categorical variables.
+```{r}
+data("tea", package="FactoMineR") # Load the data
+```
+
+After loading the data, we examine its structure and dimensions:
+```{r}
+str(tea)
+```
+The structure shows that there are 300 observations and 36 variables, except for age, all of which are factors.
+
+We visualize the data with bar plots:
+```{r, message=FALSE, warning=FALSE}
+# Load the required packages
+library(dplyr)
+library(ggplot2)
+library(GGally)
+library(tidyr)
+
+n_parts <- 4 # To how many parts the data is divided
+ends <- round(ncol(tea)/n_parts)*(1:n_parts) # End indeces
+ends[n_parts] <- max(c(ncol(tea), ends[n_parts])) 
+starts <- c(0, ends[1:(n_parts - 1)]) + 1 # Start indeces
+teas <- lapply(1:n_parts, function(i1) tea[,starts[i1]:ends[i1]])
+lapply(teas, function(dat) gather(dat) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free")
+       + geom_bar() + theme(axis.text.x = element_text(angle = 20, hjust = 1, size = 8)))
+```
+
+The discrete variable age takes so many different values that it does not show up well in the barplots above. The below summary shows its sample quantiles and one may observe that the smallest value age attains is 15, the largest 90, and the median is 32.
+```{r}
+summary(tea$age)
+```
+
+Then we do the MCA. MCA takes in categorical variables so we could make age into one or we can just do the analysis without age. We do the latter and consider even smaller subset of the variables: we take the first one fourth of the variables, do the MCA and then print out the summary of the model.
+```{r}
+colnames(teas[[1]]) # The selected variables
+mca <- FactoMineR::MCA(teas[[1]], graph=FALSE)
+summary(mca)
+```
+MCA can be thought of as categorical data correspondence of the principal component analysis. The last row in the first matrix of the above summary printout shows that as many as four dimensions are required to capture more than 50% of the variation of the variables, while there are nine variables in total. Under the topic "categories" the column "ctr" gives the contribution percentage of each variable to the corresponding dimension, and under the topic "categorical variables" is shown squared correlations between the variables and dimensions. For instance, variable tea.time gets squared correlation of 0.413 with the first dimension and therefore has a relatively strong link to first dimension.
+
+Finally, we examine the MCA biplot:
+```{r}
+plot(mca, invisible=c("ind"), habillage = "quali")
+```
+
+In the above MCA biplot, similarity of the variable categories is expressed by their distance to each other. For example, "Not.evening" and "Not.always" are very similar as are "Not.tearoom" and "Not.work", whereas "Not.home" is very different from all the other variable categories, as is "dinner" as well but not as much.
+
+
+

@@ -10,7 +10,7 @@ str(learning2014) # Variables and their types
 
 After pre-examining the data structure, it is often useful to study the data graphically as it potentially reveals important relations between the observations. A graphical summary of the data is presented below:
 
-```{r}
+```{r warning=FALSE}
 # Load the required packages
 library(ggplot2)
 library(GGally, quietly=TRUE)
