@@ -64,7 +64,7 @@ Then, we draw a biplot of the PCA:
 biplot(pca1, cex=c(0.5, 0.7), col = c("blue", "deeppink2"), las=1)
 ```
 
-__Caption:__ Biplot presenting the first two principal components obtained from applying principal component analysis based on singular value decomposition on non-standardized human data. The arrows represent the original variables.
+__Caption:__ Biplot presenting the first two principal components obtained from applying principal component analysis based on singular value decomposition on non-standardized human data. The arrows represent the original variables and the observations are labeled by the countries they correspond to.
 
 It appears that the variable GNI has dominantly the largest proportional standard deviation compared to the other variables. This is because it attains very large values (from 581 to 123124) while the other variables vary in smaller scale. Moreover, because the arrow of GNI is almost exactly horizontal it is strongly contributing to the first principal component (this can be verified by checking the loadings). Lengths or angles of the other arrows cannot be detected from the biplot. It seems apparent that the variables should thereby be standardized, so we do that and repeat the principal component analysis and draw the biplot again.
 
@@ -73,7 +73,7 @@ pca2 <- prcomp(scale(human))
 biplot(pca2, cex=c(0.5, 0.7), col = c("blue", "deeppink2"), las=1)
 ```
 
-__Caption:__ Biplot presenting the first two principal components obtained from applying principal component analysis based on singular value decomposition on standardized human data. The arrows represent the original variables.
+__Caption:__ Biplot presenting the first two principal components obtained from applying principal component analysis based on singular value decomposition on standardized human data. The arrows represent the original variables and the observations are labeled by the countries they correspond to.
 
 With standardized data the biplot seems more sensible and the all the variables seem to have role in the PCA. The variables perparliament and labratio are mainly contributing to the second principal component as they are nearly vertical, whereas the other variables are contributing to the first principal component as they are nearly horizontal. Furthermore, because the angle between percparliament or labratio and the other variables is near 90 degrees, the correlation between percparliament or labratio and the other variables is very small, as was already noted in our graphical examinations. The other variables whose arrows are closely together are highly correlated with each other while approximately 180 degrees angle indicates a high negative correlation. That is, in addition to the bundle of percparliament and labratio, there are two bundles in which variables are relatively strongly positively correlated with each other, and variables in the two bundles are relative strongly negatively correlated with variables in the other bundle. Finally, another notable feature of the biplot is that all the arrows are approximately of the same length which means that in the standardized data the proportional standard deviations are approximately the same.
 
