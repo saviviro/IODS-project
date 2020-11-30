@@ -114,7 +114,7 @@ draw_bp(RATSS2)
 
 It seems the the first group has smaller means than the other two groups. The difference is smaller between groups 2 and 3 but still the means of the second group seem significantly smaller than the one of the third group, as besides a single outlier, the group 2's mean weights are smaller than group 3's mean weights. 
 
-Following the book, we remove outlier in group 2 that may significantly alter the results, and draw the boxplot again:
+Following the book, we remove the substantial outlier in group 2 that may significantly alter the results and draw the boxplot again. There are also single outliers in groups 1 and 3 but they don't seem too serious so we will not exclude them (there is no reason to just exclude everything a boxplot classifies as an outlier).
 ```{r}
 RATSS3 <- filter(RATSS2, mean < 550)
 draw_bp(RATSS3)
