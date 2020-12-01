@@ -28,7 +28,7 @@ head(RATS, n=nrow(RATS))
 ```
 
 ### Graphical displays of longitudal data
-The RATS data contains measured body weights of rats in different points of time where the rats are divided into three groups. For each of the three group, different diets were fed to the rats. We examine the data graphically where the three groups are presented in different figures where the body weight is in the vertical axis and time in the horizontal axis:
+The RATS data contains measured body weights of rats in different points of time where the rats are divided into three groups. For each of the three groupS, different diets were fed to the rats. We examine the data graphically where the three groups are presented in different figures where the body weight is in the vertical axis and time in the horizontal axis:
 ```{r, message=FALSE, warning=FALSE}
 library(ggplot2)
 library(dplyr)
@@ -41,7 +41,7 @@ ggplot(RATSL, aes(x = Time, y = Weight, linetype = ID)) +
   scale_y_continuous(limits = c(min(RATSL$Weight), max(RATSL$Weight)))
 ```
 
-Two kind of patterns are apparent for all groups: the weight seems to increase as a function of time and rats with higher starting weight generally have higher weight throughout the study. This is generally referred to as tracking. However, if the starting weights are close to each other, the ordering of the final weights seems to be often different than the ordering of the starting weights.
+Two kind of patterns are apparent for all groups: the weight seems to increase as a function of time and rats with higher starting weight typically have higher weight throughout the study. This is often referred to as tracking. The ordering of the final weights is not, however, the same as  the ordering of the starting weights in our RATS data.
 
 We then do the same graphical examination but with standardized data (=centered and divided by standard deviation):
 ```{r}
@@ -60,18 +60,18 @@ ggplot(RATSL, aes(x = Time, y = stdweight, linetype = ID)) +
   scale_y_continuous(limits = c(min(RATSL$stdweight), max(RATSL$stdweight)))
 ```
 
-One observe the tracking phenomenom from the standardized data summary above as well. 
+One may observe the tracking phenomenom from the above standardized data summary plot as well. 
 
 ### Summary measure analysis of longitudal data
 
-We draw summary figure and plot the mean profiles:
+We draw a summary figure and plot the mean profiles with one standard error bounds:
 ```{r, message=FALSE}
 RATSS <- RATSL %>%
   group_by(Group, Time) %>%
   summarise(mean = mean(Weight), se = sd(Weight)/sqrt(length(unique(RATSL$Time)))) %>%
   ungroup()
 
-ggplot(RATSS, aes(x = Time, y = mean, linetype = Group, shape = Group)) +
+ggplot(RATSS, aes(x = Time, y = mean, linetype = Group, shape = Group, color=Group)) +
   geom_line() +
   scale_linetype_manual(values = c(1, 2, 3)) +
   geom_point(size=3) +
@@ -89,9 +89,9 @@ ggplot(RATSL, aes(x = factor(Time), y = Weight, fill=Group)) +
   geom_boxplot()
 ```
 
-One may obserce presence of some outliers in groups 1 and 3 but no outliers in group 2. The weights seem to be generally increasing, with the least within group variation in group 1, and little within group variation in group 3 as well but more within group variation in group 2. Because the medians are generally not in the middle, the weight distributions seem skewed.
+One may observe presence of some outliers in all the groups with the most serious one in group 2. This outlier can be easily detected from the first summary plot as well where one of the rats in group 2 has much higher weight that the other rats in the group. The weights seem to be generally increasing in time with the least within group variation in group 1, and little within group variation in group 3 as well but more within group variation in group 2. Because the medians are generally not in the middle, the weight distributions seem skewed.
 
-We draw the boxplots of mean versus group. We remove the initial/baseline time point as in the book.
+Next, we draw the boxplots of mean versus group. We remove the initial/baseline time point as in the book.
 ```{r, message=FALSE, warning=FALSE}
 # Remove the initial time point:
 RATSS2 <- RATSL %>%
@@ -119,7 +119,8 @@ Following the book, we remove the substantial outlier in group 2 that may signif
 RATSS3 <- filter(RATSS2, mean < 550)
 draw_bp(RATSS3)
 ```
-Now the difference between the first and third groups is more apparent.
+
+Now the difference between the second and third groups is more apparent.
 
 We formally test the group difference using two-sample t-tests without the outlier:
 ```{r}
@@ -137,7 +138,7 @@ fit <- lm(mean ~ baseline + Group, data=RATSS4)
 anova(fit)
 ```
 
-As the above summary printout of anova shows, the baseline Weight is strongly related to the Weights recorded after following the diet (as was also concluded from the graphical summaries already). The group has some (but very strong) statistical significance as well, indicating that the different diets may as well be related to the different weights recorded. Recall that the weight gaining speeds were noted to differ a bit between the groups in the earlier graphical summaries, being in line with the results from anova.
+As the above summary printout of anova shows, the baseline weight is strongly related to the weights recorded after following the diet (as was also concluded from the graphical summaries already). The group variable has some (but not very strong) statistical significance as well, indicating that the different diets may as well be related to the different weights recorded. Recall that the weight gaining speeds were noted to differ a bit between the groups in the earlier graphical summaries, being in line with the results from anova.
 
 We don't have missing values in the data, so that part of the book's chapter 8 wont be replicated here. 
 
@@ -164,9 +165,13 @@ Table of long from BPRS data for the baseline week;
 head(BPRSL, n=40)
 ```
 
-Plot of bprs against week (time) for BPRS data, ignoring the repeated-measures structure of the data:
+Plot of bprs against week (time) for BPRS data, ignoring the repeated-measures structure of the data (the week variable is jittered to reveal overlapping observations):
 ```{r}
-plot(bprs ~ week, data=BPRSL, pch=c("1", "2")[treatment])
+with(BPRSL, plot(c(min(week), max(week)), c(min(bprs), max(bprs)), type="n", ylab="bprs",
+                 xlab="week", las=1))
+rect(col="black", -10, -10, 10, 100)
+with(BPRSL, points(y=bprs, x=jitter(week), pch=c("1", "2")[treatment],
+                   col=c("magenta", "green")[treatment], cex=1))
 ```
 
 Then we create a graphical display of the data that takes into account the longitudal structure:
@@ -179,7 +184,8 @@ p1 <- ggplot(BPRSL, aes(x = week, y = bprs, group=ID)) +
         theme(legend.position = "top")
 p1
 ```
-the above figure shows the individual subjects bprs profiles. The bprs seems to be generally decreasing slightly but it is difficult to detect any apparent differences between the two treatments.
+
+The above figure shows the individual subjects' bprs profiles. The bprs seems to be generally decreasing slightly but it is difficult to detect any apparent differences between the two treatments.
 
 
 Scatter plot matrix of repreated measures in BPRS data:
@@ -201,7 +207,8 @@ pairs(BPRS[,3:11], gap=0.4, font.labels=2, cex.labels=1, panel=function(x, y) {
          cex=1.2)
   })
 ```
-Due to the linear patterns in the scatterplots in the upper-right triangle above, it seems that the repeated measurements are far from independent from each other, making the independence assumption in the OLS regression inappropriate (although I think OLS estimator generally has good properties under much weaker assumptions than independence). The lower-right triangle show the sample correlations with high red color indicating high correlation - this also shows strong linear depedence between the weeks.
+
+Due to the linear patterns in the scatterplots in the upper-right triangle above, it seems that the repeated measurements are far from independent from each other, making the independence assumption discussed in the book inappropriate. The lower-right triangle show the sample correlations with deep red color indicating high correlation - this also shows strong linear dependence between the weeks.
 
 We fit linear regression model via OLS to the BPRS data with bprs as response, and treatment and week (time) as explanatory variables, and ignoring the repeated measures structure of the data:
 ```{r}
@@ -222,7 +229,7 @@ Then we fit a random intercept and slope model with week and treatment as explan
 fit2 <- lmer(bprs ~ week + treatment + (week | ID), data = BPRSL, REML = FALSE)
 summary(fit2)
 ```
-Focusing on the random effects, notice that the variance of the random intercepts increased while the variance for the random slope also seems relative large. Focusing then on the fixed effects, the week parameter with negative coefficient estimate has a large t-value, so also in this model the bprs score seems to decrease over time. The t-value for the treatment coefficient is still small, indicating that there is no statistically significant difference between in the intercepts between the two treatments. 
+Focusing on the random effects, notice that the variance of the random intercepts increased while the variance for the random slope also seems relative large. Focusing then on the fixed effects, the week parameter with negative coefficient estimate has a large t-value, so also in this model the bprs score seems to decrease over time. The t-value for the treatment coefficient is still small, indicating that there is no statistically significant difference between in the fixed effects intercepts in the two treatments. 
 
 Next, we estimate a random intercept and random slope model that also allows for interactions between the treatment and week variable. That is, subjects with different treatments may have different fixed effect slopes. We also examine the summary printout:
 ```{r}
@@ -233,7 +240,7 @@ Focusing on the random effects, the variances of the random intercepts and slope
 ```{r}
 2*(1 - pnorm(1.349))
 ```
-for the null hypothesis that the interaction is zero. The interaction is more statistically significant than the intercept difference of treatments (which should be included to control for different starting scores) but due to the large p-value we cannot say with great certainty that the bprs scores decrease with different speed for subjects with different treatments. The point estimate, nonetheless, implies that the bprs score decreases less over time for subjects with treatment 2 than with treatment 1. 
+for the null hypothesis that the interaction is zero. The interaction is more statistically significant than the intercept difference of treatments (which may be included to control for different starting scores in the two groups) but due to the large p-value we cannot say with great certainty that the bprs scores decrease with different speed for subjects with different treatments. The point estimate, nonetheless, implies that the bprs score decreases less over time for subjects with treatment 2 than with treatment 1. 
 
 After examining the summary printout, we visualize the model with random intercepts and slopes as well as fixed effects interaction for treatment and time slope. We also plot the observed values next to the fitted values.
 ```{r, message=FALSE}
@@ -249,7 +256,7 @@ p2 <- ggplot(BPRSL, aes(x = week, y = Fitted, group = ID)) +
 ggarrange(p1, p2, labels=c("Observed", "Fitted"), ncol=2, nrow=1)
 ```
 
-Looking at the fitted values, the conclusions from the summary printout are apparent also in the plot: the intercepts do not in average seem to be much different for the two treatments, while bprs seems to decrease a bit faster with the first treatment but the difference is not very large. Also, some of the slopes are positive and not negative.
+Looking at the fitted values, the conclusions from the summary printout are apparent also in the plot: the intercepts do not in average seem to be much different for the two treatments, while bprs seems to decrease on average a bit faster with the first treatment but the difference is not very large. Also, some of the slopes are positive and not negative.
 
 I suppose replicating Section 9.4 considering the BtB data is not necessary as we already did the similar things with the BPRS data. 
 
